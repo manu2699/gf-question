@@ -1,7 +1,7 @@
 // Bad: Over-fetching, memoization issues, and improper effect usage
 import { useState, useEffect, useMemo } from 'react';
 import { fetchCustomers } from '../../services/Api';
-import { formatMoney } from '../../utils/formatting';
+import { formatCurrency } from '../../utils/formatting';
 
 const DashboardPage = ({ userId }) => {
   const [stats, setStats] = useState({});
@@ -54,7 +54,7 @@ const DashboardPage = ({ userId }) => {
   // Inefficient calculation - runs on every render
   const formattedRevenue = useMemo(() => {
     console.log('Formatting revenue...');
-    return formatMoney(stats.totalRevenue || 0);
+    return formatCurrency(stats.totalRevenue || 0);
   }, [stats.totalRevenue]);
   
   // Unnecessary use of useMemo for simple calculations

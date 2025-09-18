@@ -1,7 +1,7 @@
 // Old customer page, don't modify
-import React from 'react';
-import { getCustomerData } from '../../utils/helpers/oldUtils';
-import { CustomerCard } from '../components/OLD_COMPONENTS/CustomerCard';
+// import React from "react";
+// import { getCustomerData } from "./../../../utils/helpers/oldUtils";
+import { CustomerCard } from "./CustomerCard";
 
 export const CustomerPage = () => {
   return (
