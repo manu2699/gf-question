@@ -1,0 +1,40 @@
+.settingsContainer{
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.tabs{
+    display: flex;
+    /* margin-bottom: 12px; */
+}
+
+.tab{
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    color: var(--color-foreground-dim);
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    margin-right: 6px;
+}
+
+.activeTab{
+    color: white;
+    background-color: var(--color-primary);
+}
+
+.tabContent{
+    border: 1px solid var(--color-border);
+    padding: 20px;
+    border-radius: 0 0 4px 4px;
+    padding: 12px;
+
+    button{
+        margin-block: 12px;
+    }
+}
+
+.notAllowedButton{
+    cursor: not-allowed;
+}
