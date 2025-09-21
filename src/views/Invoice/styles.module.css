@@ -75,3 +75,13 @@
 .overDueText {
   color: var(--color-error);
 }
+
+.sidebar {
+  background-color: var(--color-background);
+  padding: 16px;
+  border-radius: 8px;
+
+  h4 {
+    margin: 0;
+  }
+}

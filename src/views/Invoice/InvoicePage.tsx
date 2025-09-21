@@ -230,10 +230,8 @@ export const InvoicePage = () => {
           />
         </DataTable>
         <div className={styles.sidebar}>
-          <div className={styles.panel}>
-            <h4>Recent Activity</h4>
-            <div className={styles.activityList}></div>
-          </div>
+          <h4>Recent Activity</h4>
+          <div className={styles.activityList}></div>
         </div>
       </div>
 
