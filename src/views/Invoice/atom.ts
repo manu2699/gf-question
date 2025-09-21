@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import type { Invoice, InvoiceStats } from "./type";
+import type { Invoice, InvoiceStats, InvoiceStatus } from "./type";
 
 interface InvoiceState {
   data: Invoice[];
@@ -8,7 +8,7 @@ interface InvoiceState {
   error: string | null;
 }
 
-interface TableControls {
+export interface TableControls {
   pageSize: number;
   pageNumber: number;
   searchTerm: string;
@@ -18,9 +18,9 @@ interface TableControls {
   selectedRows: string[];
 }
 
-interface UIState {
-  changeStatusModalOpen: boolean;
-  newStatus: string;
+interface ChangeStatusAtom {
+  isModalOpen: boolean;
+  newStatus: InvoiceStatus | string;
 }
 
 // Server state mimiced as Atom
@@ -41,8 +41,8 @@ export const tableControlsAtom = atom<TableControls>({
   selectedRows: [],
 });
 
-export const uiStateAtom = atom<UIState>({
-  changeStatusModalOpen: false,
+export const changeStatusAtom = atom<ChangeStatusAtom>({
+  isModalOpen: false,
   newStatus: "",
 });
 
@@ -74,7 +74,6 @@ export const updateInvoiceDataAtom = atom(
       error = currentState.error,
     } = updates;
     set(invoiceStateAtom, {
-      ...currentState,
       data,
       totalCount,
       loading,
@@ -96,9 +95,7 @@ export const updateTableControlsAtom = atom(
       sortDirection = currentState.sortDirection,
       selectedRows = currentState.selectedRows,
     } = updates;
-    console.log("table contrl :: 2", currentState, updates);
     set(tableControlsAtom, {
-      ...currentState,
       pageSize,
       pageNumber,
       searchTerm,
@@ -110,17 +107,16 @@ export const updateTableControlsAtom = atom(
   }
 );
 
-export const updateUIStateAtom = atom(
+export const updateChangeStatusAtom = atom(
   null,
-  (get, set, updates: Partial<UIState>) => {
-    const currentState = get(uiStateAtom);
+  (get, set, updates: Partial<ChangeStatusAtom>) => {
+    const currentState = get(changeStatusAtom);
     const {
-      changeStatusModalOpen = currentState.changeStatusModalOpen,
+      isModalOpen = currentState.isModalOpen,
       newStatus = currentState.newStatus,
     } = updates;
-    set(uiStateAtom, {
-      ...currentState,
-      changeStatusModalOpen,
+    set(changeStatusAtom, {
+      isModalOpen,
       newStatus,
     });
   }
@@ -136,7 +132,6 @@ export const updateInvoiceStatsAtom = atom(
       error = currentState.error,
     } = updates;
     set(invoiceStatsAtom, {
-      ...currentState,
       stats,
       loading,
       error,

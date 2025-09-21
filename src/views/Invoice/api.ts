@@ -1,3 +1,4 @@
+import type { TableControls } from "./atom";
 import {
   InvoiceStatuses,
   type Invoice,
@@ -76,7 +77,7 @@ export const generateMockInvoices = (count: number): Invoice[] => {
 
 const totalCount = 200;
 const mockData = generateMockInvoices(totalCount);
-console.log("mock data :: ", mockData);
+// console.log("mock data :: ", mockData);
 
 const getNestedValue = (
   obj: Record<string, unknown>,
@@ -85,26 +86,15 @@ const getNestedValue = (
   return path.split(".").reduce((newObj, key) => newObj?.[key], obj);
 };
 
-export interface FetchParams {
-  pageSize?: number;
-  pageNumber?: number;
-  searchTerm?: string;
-  filterStatus?: string;
-  sortBy?: string;
-  sortDirection?: "asc" | "desc";
-}
-
-export const fetchMockInvoices = (
-  {
+export const fetchMockInvoices = (fetchPayload: TableControls, delay = 500) => {
+  const {
     pageSize = 10,
     pageNumber = 1,
     searchTerm,
     filterStatus,
     sortBy,
     sortDirection,
-  }: FetchParams,
-  delay = 500
-) => {
+  } = fetchPayload;
   return new Promise<{ totalCount: number; data: Invoice[] }>((resolve) => {
     let data = [...mockData];
 

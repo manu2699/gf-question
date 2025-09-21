@@ -225,7 +225,6 @@ const DataTableBody = ({
           <tr className={styles.tableHeaderRow}>
             {rowSelectable && (
               <th className={styles.tableHeaderCell}>
-                {/* {renderCheckboxIcon(getCheckboxState(), handleSelectAll)} */}
                 <input
                   type="checkbox"
                   checked={checkboxState === "all"}

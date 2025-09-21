@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { DollarSign, TrendingUp, Users, Clock } from "lucide-react";
 import { useAtomValue, useSetAtom, getDefaultStore } from "jotai";
 
@@ -13,9 +13,11 @@ import type { Invoice, InvoiceStatus } from "./type";
 import { fetchMockInvoices, fetchMockStats, updateBulkStatus } from "./api";
 import { columnsDef, filterOptions } from "./constants";
 import {
+  changeStatusAtom,
   invoiceStateAtom,
   invoiceStatsAtom,
   tableControlsAtom,
+  updateChangeStatusAtom,
   updateInvoiceDataAtom,
   updateInvoiceStatsAtom,
   updateTableControlsAtom,
@@ -32,13 +34,12 @@ export const InvoicePage = () => {
     error: invoicesError,
   } = useAtomValue(invoiceStateAtom);
   const tableControls = useAtomValue(tableControlsAtom);
+  const { isModalOpen, newStatus } = useAtomValue(changeStatusAtom);
 
   const updateInvoiceStats = useSetAtom(updateInvoiceStatsAtom);
   const updateInvoiceData = useSetAtom(updateInvoiceDataAtom);
   const updateTableControls = useSetAtom(updateTableControlsAtom);
-
-  const [changeStatusModalOpen, setChangeStatusModalOpen] = useState(false);
-  const [newStatus, setNewStatus] = useState<InvoiceStatus | "">("");
+  const updateStatusChange = useSetAtom(updateChangeStatusAtom);
 
   const tableRef = useRef<DataTableRefObject>({
     clearSelectedRows: () => {
@@ -122,8 +123,11 @@ export const InvoicePage = () => {
 
   const handleStatusChange = () => {
     if (!newStatus) return;
-    updateBulkStatus(tableControls.selectedRows, newStatus).then(() => {
-      setChangeStatusModalOpen(false);
+    updateBulkStatus(
+      tableControls.selectedRows,
+      newStatus as InvoiceStatus
+    ).then(() => {
+      updateStatusChange({ isModalOpen: false, newStatus: "" });
       tableRef.current.clearSelectedRows();
     });
   };
@@ -200,7 +204,7 @@ export const InvoicePage = () => {
               >
                 Clear Selection
               </button>
-              <button onClick={() => setChangeStatusModalOpen(true)}>
+              <button onClick={() => updateStatusChange({ isModalOpen: true })}>
                 Change Status
               </button>
             </DataTable.SubHeader>
@@ -236,15 +240,15 @@ export const InvoicePage = () => {
       </div>
 
       <Modal
-        isOpen={changeStatusModalOpen}
+        isOpen={isModalOpen}
         title="Change Status"
-        onClose={() => setChangeStatusModalOpen(false)}
+        onClose={() => updateStatusChange({ isModalOpen: false })}
         width={"500px"}
         footerRenderer={() => (
           <>
             <button
               className={"secondaryButton"}
-              onClick={() => setChangeStatusModalOpen(false)}
+              onClick={() => updateStatusChange({ isModalOpen: false })}
             >
               Cancel
             </button>
@@ -257,7 +261,7 @@ export const InvoicePage = () => {
           invoices
           <br />
           <select
-            onChange={(e) => setNewStatus(e.target.value as InvoiceStatus)}
+            onChange={(e) => updateStatusChange({ newStatus: e.target.value })}
             value={newStatus}
           >
             <option value="">Select Status</option>
