@@ -17,13 +17,17 @@ export interface Column {
   sortable?: boolean;
   render?: (
     value: CellValue,
-    row?: TableDatum,
+    row?: TableDatum
   ) => React.ReactNode | string | number;
 }
 
 export interface DataTableProps {
   children: React.ReactNode;
   className?: string;
+}
+
+export interface DataTableRefObject {
+  clearSelectedRows: () => void;
 }
 
 export interface DataTableBodyProps {
@@ -33,11 +37,12 @@ export interface DataTableBodyProps {
   error?: string | null;
   rowSelectable?: boolean;
   selectedRows?: string[];
+  ref?: React.RefObject<DataTableRefObject>;
   onRowClick?: (row: TableDatum, index: number) => void;
   onRowSelect?: (
     selectedRows: string[],
     row: TableDatum,
-    isSelected: boolean,
+    isSelected: boolean
   ) => void;
   onColumnSort?: (key: string, direction: SortDirection) => void;
   sortKey?: string;

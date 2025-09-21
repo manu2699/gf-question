@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { DollarSign, TrendingUp, Users, Clock } from "lucide-react";
 
 import { DataTable } from "@/components/DataTable";
+import type { DataTableRefObject } from "@/components/DataTable/types";
 import { Modal } from "@/components/Modal";
 import { StatsCard } from "@/components/StatCard";
 import { debounce } from "@/utils/debounce";
@@ -62,6 +63,12 @@ export const InvoicePage = () => {
   const [changeStatusModalOpen, setChangeStatusModalOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<InvoiceStatus | "">("");
 
+  const tableRef = useRef<DataTableRefObject>({
+    clearSelectedRows: () => {
+      setSelectedRows([]);
+    },
+  });
+
   const fetchData = useCallback(
     (params: FetchParams = {}) => {
       setTableData((prev) => ({ ...prev, isLoading: true }));
@@ -74,7 +81,7 @@ export const InvoicePage = () => {
           sortBy: params.sortBy ?? sortState.key,
           sortDirection: params.sortDirection ?? sortState.direction,
         },
-        800,
+        800
       ).then((data) => {
         setTableData({
           data: data.data as Invoice[],
@@ -84,7 +91,7 @@ export const InvoicePage = () => {
         });
       });
     },
-    [pageState, searchQuery, statusFilter, sortState],
+    [pageState, searchQuery, statusFilter, sortState]
   );
 
   useEffect(() => {
@@ -101,7 +108,7 @@ export const InvoicePage = () => {
       setSortState({ key: columnId, direction });
       fetchData({ sortBy: columnId, sortDirection: direction });
     },
-    [],
+    []
   );
 
   const handleFilterChange = useCallback((value: string) => {
@@ -112,7 +119,7 @@ export const InvoicePage = () => {
 
   const debouncedFetch = useCallback(
     debounce((params) => fetchData(params as FetchParams), 500),
-    [],
+    []
   );
 
   const handleSearchChange = useCallback(
@@ -120,7 +127,7 @@ export const InvoicePage = () => {
       setSearchQuery(value);
       debouncedFetch({ pageNumber: 1, searchTerm: value });
     },
-    [debouncedFetch],
+    [debouncedFetch]
   );
 
   const handlePageChange = useCallback((page: number) => {
@@ -142,6 +149,7 @@ export const InvoicePage = () => {
     updateBulkStatus(selectedRows, newStatus).then(() => {
       fetchData();
       setChangeStatusModalOpen(false);
+      tableRef.current.clearSelectedRows();
     });
   };
 
@@ -211,6 +219,12 @@ export const InvoicePage = () => {
           {selectedRows.length > 0 ? (
             <DataTable.SubHeader>
               <span>{selectedRows.length} Invoices Selected</span>
+              <button
+                className={"secondaryButton"}
+                onClick={() => tableRef.current.clearSelectedRows()}
+              >
+                Clear Selection
+              </button>
               <button onClick={() => setChangeStatusModalOpen(true)}>
                 Change Status
               </button>
@@ -222,7 +236,6 @@ export const InvoicePage = () => {
             data={tableData.data}
             isLoading={tableData.isLoading}
             error={tableData.error}
-            // onRowClick={handleRowClick}
             rowSelectable={true}
             selectedRows={selectedRows}
             onRowSelect={handleRowSelect}
@@ -230,6 +243,7 @@ export const InvoicePage = () => {
             sortKey={sortState.key}
             sortDirection={sortState.direction}
             getRowId={(row) => `${row.id}`}
+            ref={tableRef}
           />
 
           <DataTable.Pagination

@@ -1,4 +1,9 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useImperativeHandle,
+} from "react";
 import {
   Search,
   RefreshCw,
@@ -130,9 +135,19 @@ const DataTableBody = ({
   sortDirection,
   getRowId = (_: TableDatum, index?: number) => `row-${index?.toString()}`,
   className,
+  ref,
 }: DataTableBodyProps) => {
   const [localSelectedRows, setLocalSelectedRows] =
     useState<string[]>(selectedRows);
+
+  useImperativeHandle(ref, () => ({
+    clearSelectedRows: () => {
+      setLocalSelectedRows([]);
+      if (onRowSelect) {
+        onRowSelect([], data[0], false);
+      }
+    },
+  }));
 
   const handleSort = useCallback(
     (key: string) => {
