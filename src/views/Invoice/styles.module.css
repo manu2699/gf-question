@@ -1,0 +1,77 @@
+.container {
+  padding: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 18px;
+  h1 {
+    font-size: 32px;
+    margin: 0;
+  }
+  p {
+    color: var(--color-foreground-dim);
+    margin: 0;
+    margin-top: 8px;
+  }
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.contentGrid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+}
+
+.tableContainer {
+  background-color: var(--color-background);
+}
+
+.statusBadge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.statusOverdue {
+  background-color: #fee2e2;
+  color: var(--color-error);
+}
+
+.statusPending {
+  background-color: #fef3c7;
+  color: var(--color-warning);
+}
+
+.statusPaid {
+  background-color: #d1fae5;
+  color: var(--color-success);
+}
+
+.statusDraft {
+  background-color: #e0e7ff;
+  color: var(--color-primary);
+}
+
+.commentIcon {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  padding-inline: 8px;
+  color: var(--color-foreground);
+}
+
+.overDueText {
+  color: var(--color-error);
+}

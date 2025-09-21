@@ -3,15 +3,16 @@
   height: 100%;
 }
 
-.page{
+.page {
   padding: 20px;
   width: 100%;
   height: 100%;
   background: var(--color-page-bg);
   color: var(--color-foreground);
+  overflow: auto;
 }
 
-.secondaryButton{
+.secondaryButton {
   background-color: transparent;
   color: var(--color-foreground);
   border: 1px solid var(--color-border);
@@ -25,12 +26,12 @@
   overflow: hidden;
 }
 
-.leftNavWrapper{
+.leftNavWrapper {
   width: 250px;
   border-right: 1px solid var(--color-border);
 }
 
-.wrapper{
+.wrapper {
   width: 100%;
   height: 100%;
   display: grid;
@@ -38,13 +39,29 @@
   overflow: hidden;
 }
 
-.topNavWrapper{
+.topNavWrapper {
   height: 50px;
   border-bottom: 1px solid var(--color-border);
 }
 
-.contentWrapper{
+.contentWrapper {
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: skeletonAnimation 1s infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeletonAnimation {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
