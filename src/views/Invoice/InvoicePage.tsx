@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { DollarSign, TrendingUp, Users, Clock } from "lucide-react";
+import { useAtomValue, useSetAtom, getDefaultStore } from "jotai";
 
 import { DataTable } from "@/components/DataTable";
 import type { DataTableRefObject } from "@/components/DataTable/types";
@@ -8,146 +9,120 @@ import { StatsCard } from "@/components/StatCard";
 import { debounce } from "@/utils/debounce";
 import { formatCurrency } from "@/utils/formatting";
 
-import type { Invoice, InvoiceStats, InvoiceStatus } from "./type";
-import {
-  fetchMockInvoices,
-  fetchMockStats,
-  type FetchParams,
-  updateBulkStatus,
-} from "./api";
+import type { Invoice, InvoiceStatus } from "./type";
+import { fetchMockInvoices, fetchMockStats, updateBulkStatus } from "./api";
 import { columnsDef, filterOptions } from "./constants";
+import {
+  invoiceStateAtom,
+  invoiceStatsAtom,
+  tableControlsAtom,
+  updateInvoiceDataAtom,
+  updateInvoiceStatsAtom,
+  updateTableControlsAtom,
+} from "./atom";
 
 import styles from "./styles.module.css";
 
 export const InvoicePage = () => {
-  const [stats, setStats] = useState<InvoiceStats>({
-    totalOutstanding: { value: 0, change: 0, trend: "up" },
-    collectionRate: { value: 0, change: 0, trend: "up" },
-    activeCustomers: { value: 0, change: 0, trend: "up" },
-    avgDaysToPay: { value: 0, change: 0, trend: "up" },
-  });
-  const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const { stats, loading: statsLoading } = useAtomValue(invoiceStatsAtom);
+  const {
+    data: invoices,
+    loading: invoicesLoading,
+    totalCount: totalInvoices,
+    error: invoicesError,
+  } = useAtomValue(invoiceStateAtom);
+  const tableControls = useAtomValue(tableControlsAtom);
 
-  const [tableData, setTableData] = useState<{
-    data: Invoice[];
-    count: number;
-    error: string | null;
-    isLoading: boolean;
-  }>({
-    data: [],
-    count: 0,
-    error: null,
-    isLoading: false,
-  });
-
-  const [pageState, setPageState] = useState<{
-    size: number;
-    number: number;
-  }>({
-    size: 10,
-    number: 1,
-  });
-
-  const [sortState, setSortState] = useState<{
-    key: string;
-    direction: "asc" | "desc";
-  }>({
-    key: "",
-    direction: "asc",
-  });
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const updateInvoiceStats = useSetAtom(updateInvoiceStatsAtom);
+  const updateInvoiceData = useSetAtom(updateInvoiceDataAtom);
+  const updateTableControls = useSetAtom(updateTableControlsAtom);
 
   const [changeStatusModalOpen, setChangeStatusModalOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<InvoiceStatus | "">("");
 
   const tableRef = useRef<DataTableRefObject>({
     clearSelectedRows: () => {
-      setSelectedRows([]);
+      updateTableControls({ selectedRows: [] });
     },
   });
 
-  const fetchData = useCallback(
-    (params: FetchParams = {}) => {
-      setTableData((prev) => ({ ...prev, isLoading: true }));
-      fetchMockInvoices(
-        {
-          pageSize: params.pageSize ?? pageState.size,
-          pageNumber: params.pageNumber ?? pageState.number,
-          searchTerm: params.searchTerm ?? searchQuery,
-          filterStatus: params.filterStatus ?? statusFilter,
-          sortBy: params.sortBy ?? sortState.key,
-          sortDirection: params.sortDirection ?? sortState.direction,
-        },
-        800
-      ).then((data) => {
-        setTableData({
-          data: data.data as Invoice[],
-          count: data.totalCount,
-          error: null,
-          isLoading: false,
-        });
+  const fetchData = useCallback(() => {
+    updateInvoiceData({ loading: true });
+    const tableControls = getDefaultStore().get(tableControlsAtom);
+    fetchMockInvoices({
+      pageSize: tableControls.pageSize,
+      pageNumber: tableControls.pageNumber,
+      searchTerm: tableControls.searchTerm,
+      filterStatus: tableControls.filterStatus,
+      sortBy: tableControls.sortBy,
+      sortDirection: tableControls.sortDirection,
+    }).then((data) => {
+      updateInvoiceData({
+        data: data.data as Invoice[],
+        totalCount: data.totalCount,
+        error: null,
+        loading: false,
       });
-    },
-    [pageState, searchQuery, statusFilter, sortState]
-  );
+    });
+  }, [updateInvoiceData]);
 
   useEffect(() => {
-    setIsStatsLoading(true);
     fetchData();
     fetchMockStats().then((data) => {
-      setStats(data);
-      setIsStatsLoading(false);
+      updateInvoiceStats({
+        stats: data,
+        loading: false,
+        error: null,
+      });
     });
   }, []);
 
   const handleColumnSort = useCallback(
     (columnId: string, direction: "asc" | "desc") => {
-      setSortState({ key: columnId, direction });
-      fetchData({ sortBy: columnId, sortDirection: direction });
+      updateTableControls({ sortBy: columnId, sortDirection: direction });
+      fetchData();
     },
     []
   );
 
   const handleFilterChange = useCallback((value: string) => {
-    setStatusFilter(value);
-    setPageState((prev) => ({ ...prev, number: 1 }));
-    fetchData({ filterStatus: value, pageNumber: 1 });
+    updateTableControls({ filterStatus: value, pageNumber: 1 });
+    fetchData();
   }, []);
 
   const debouncedFetch = useCallback(
-    debounce((params) => fetchData(params as FetchParams), 500),
+    debounce(() => fetchData(), 500),
     []
   );
 
   const handleSearchChange = useCallback(
     (value: string) => {
-      setSearchQuery(value);
-      debouncedFetch({ pageNumber: 1, searchTerm: value });
+      updateTableControls({ searchTerm: value, pageNumber: 1 });
+      debouncedFetch();
     },
-    [debouncedFetch]
+    [debouncedFetch, updateTableControls]
   );
 
   const handlePageChange = useCallback((page: number) => {
-    setPageState((prev) => ({ ...prev, number: page }));
-    fetchData({ pageNumber: page });
+    updateTableControls({ pageNumber: page });
+    fetchData();
   }, []);
 
   const handlePageSizeChange = useCallback((size: number) => {
-    setPageState({ size, number: 1 });
-    fetchData({ pageSize: size, pageNumber: 1 });
+    updateTableControls({ pageSize: size });
+    fetchData();
   }, []);
 
-  const handleRowSelect = useCallback((selectedRowsIds: string[]) => {
-    setSelectedRows(selectedRowsIds);
-  }, []);
+  const handleRowSelect = useCallback(
+    (selectedRowsIds: string[]) => {
+      updateTableControls({ selectedRows: selectedRowsIds });
+    },
+    [updateTableControls]
+  );
 
   const handleStatusChange = () => {
     if (!newStatus) return;
-    updateBulkStatus(selectedRows, newStatus).then(() => {
-      fetchData();
+    updateBulkStatus(tableControls.selectedRows, newStatus).then(() => {
       setChangeStatusModalOpen(false);
       tableRef.current.clearSelectedRows();
     });
@@ -163,7 +138,7 @@ export const InvoicePage = () => {
       <div className={styles.statsGrid}>
         <StatsCard
           icon={<DollarSign />}
-          isLoading={isStatsLoading}
+          isLoading={statsLoading}
           label="Total Outstanding"
           value={formatCurrency(Number(stats?.totalOutstanding?.value))}
           change={stats.totalOutstanding?.change}
@@ -171,7 +146,7 @@ export const InvoicePage = () => {
         />
         <StatsCard
           icon={<TrendingUp />}
-          isLoading={isStatsLoading}
+          isLoading={statsLoading}
           label="Collections Rate"
           value={`${stats.collectionRate.value}%`}
           change={stats.collectionRate.change}
@@ -179,7 +154,7 @@ export const InvoicePage = () => {
         />
         <StatsCard
           icon={<Users />}
-          isLoading={isStatsLoading}
+          isLoading={statsLoading}
           label="Active Customers"
           value={stats.activeCustomers?.value}
           change={stats.activeCustomers?.change}
@@ -187,7 +162,7 @@ export const InvoicePage = () => {
         />
         <StatsCard
           icon={<Clock />}
-          isLoading={isStatsLoading}
+          isLoading={statsLoading}
           label="Avg. Days to Pay"
           value={`${stats.avgDaysToPay?.value} days`}
           change={stats.avgDaysToPay?.change}
@@ -201,24 +176,24 @@ export const InvoicePage = () => {
             <DataTable.Title>Invoice Management</DataTable.Title>
             <DataTable.Search
               placeholder="Search invoices..."
-              value={searchQuery}
+              value={tableControls.searchTerm}
               onChange={handleSearchChange}
             />
             <DataTable.Filter
               options={filterOptions}
-              value={statusFilter}
+              value={tableControls.filterStatus}
               onChange={handleFilterChange}
               placeholder="All Status"
             />
             <DataTable.Refresh
               onClick={fetchData}
-              isLoading={tableData.isLoading}
+              isLoading={invoicesLoading}
             />
           </DataTable.Header>
 
-          {selectedRows.length > 0 ? (
+          {tableControls.selectedRows.length > 0 ? (
             <DataTable.SubHeader>
-              <span>{selectedRows.length} Invoices Selected</span>
+              <span>{tableControls.selectedRows.length} Invoices Selected</span>
               <button
                 className={"secondaryButton"}
                 onClick={() => tableRef.current.clearSelectedRows()}
@@ -233,23 +208,23 @@ export const InvoicePage = () => {
 
           <DataTable.Body
             columns={columnsDef}
-            data={tableData.data}
-            isLoading={tableData.isLoading}
-            error={tableData.error}
+            data={invoices}
+            isLoading={invoicesLoading}
+            error={invoicesError}
             rowSelectable={true}
-            selectedRows={selectedRows}
+            selectedRows={tableControls.selectedRows}
             onRowSelect={handleRowSelect}
             onColumnSort={handleColumnSort}
-            sortKey={sortState.key}
-            sortDirection={sortState.direction}
+            sortKey={tableControls.sortBy}
+            sortDirection={tableControls.sortDirection}
             getRowId={(row) => `${row.id}`}
             ref={tableRef}
           />
 
           <DataTable.Pagination
-            currentPage={pageState.number}
-            totalCount={tableData.count}
-            pageSize={pageState.size}
+            currentPage={tableControls.pageNumber}
+            totalCount={totalInvoices}
+            pageSize={tableControls.pageSize}
             onPageSizeChange={handlePageSizeChange}
             onPageChange={handlePageChange}
           />
@@ -280,7 +255,8 @@ export const InvoicePage = () => {
         )}
       >
         <span>
-          Assign new status for {selectedRows.length} selected invoices
+          Assign new status for {tableControls.selectedRows.length} selected
+          invoices
           <br />
           <select
             onChange={(e) => setNewStatus(e.target.value as InvoiceStatus)}

@@ -24,7 +24,7 @@ const comments = ["Review the invoice.", "Payment is due in 30 days."];
 
 const generateRandomDate = (start: Date, end: Date): Date => {
   return new Date(
-    start.getTime() + Math.random() * (end.getTime() - start.getTime()),
+    start.getTime() + Math.random() * (end.getTime() - start.getTime())
   );
 };
 
@@ -49,7 +49,7 @@ export const generateMockInvoices = (count: number): Invoice[] => {
     const diffTime = today.getTime() - dueDate.getTime();
     const daysOverdue = Math.max(
       0,
-      Math.floor(diffTime / (1000 * 60 * 60 * 24)),
+      Math.floor(diffTime / (1000 * 60 * 60 * 24))
     );
 
     return {
@@ -80,7 +80,7 @@ console.log("mock data :: ", mockData);
 
 const getNestedValue = (
   obj: Record<string, unknown>,
-  path: string,
+  path: string
 ): unknown => {
   return path.split(".").reduce((newObj, key) => newObj?.[key], obj);
 };
@@ -103,7 +103,7 @@ export const fetchMockInvoices = (
     sortBy,
     sortDirection,
   }: FetchParams,
-  delay = 500,
+  delay = 500
 ) => {
   return new Promise<{ totalCount: number; data: Invoice[] }>((resolve) => {
     let data = [...mockData];
@@ -114,7 +114,7 @@ export const fetchMockInvoices = (
         (invoice) =>
           invoice.invoiceNumber.toLowerCase().includes(searchLower) ||
           invoice.customer?.name?.toLowerCase?.().includes(searchLower) ||
-          invoice.amount.toString().includes(searchLower),
+          invoice.amount.toString().includes(searchLower)
       );
     }
 
@@ -154,11 +154,11 @@ export const fetchMockStats = (delay = 300) => {
     const outstandingInvoices = mockData.filter(
       (inv) =>
         inv.status === InvoiceStatuses.PENDING ||
-        inv.status === InvoiceStatuses.OVERDUE,
+        inv.status === InvoiceStatuses.OVERDUE
     );
     const totalOutstanding = outstandingInvoices.reduce(
       (sum, inv) => sum + inv.amount,
-      0,
+      0
     );
     setTimeout(() => {
       resolve({
@@ -174,7 +174,7 @@ export const fetchMockStats = (delay = 300) => {
 export const updateBulkStatus = (
   rowIds: string[],
   status: InvoiceStatus,
-  delay = 500,
+  delay = 500
 ) => {
   return new Promise<{ success: boolean }>((resolve) => {
     mockData.forEach((invoice) => {

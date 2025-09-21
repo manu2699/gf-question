@@ -311,7 +311,6 @@ const DataTablePagination: React.FC<DataTablePaginationProps> = ({
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const getVisiblePages = () => {
-    console.log("totalPages :: ", totalPages);
     if (totalPages <= 1) return [1];
     const delta = 2;
     const pages: (string | number)[] = [1];
